@@ -14,16 +14,18 @@ Lorraine.crache_un_graphe(epsilon,duree)
 """
 
 
-# Un appel de la fonction qui renvoie le nombre d'infecté au bout d'une durée pour un env 
+# Les test pour savoir si notre modèle est cohérent 
 
-
-NN = (10**6) * 2
-beta,pi,mu = 5,1,0.5
-VIRUS = env.epidemie(beta,pi,mu)
-Lorraine = env.env_minimal("Lorraine",NN,VIRUS,0,NN-40,40,0,0,0)
-epsilon = 0.5 # proportionde la population testée
-duree = 15 # en jours 
+NN = (10**5) 
+R,pi,mu = 8,1,1/14
+VIRUS = env.maladie(R,pi,mu)
+Lorraine = env.env_minimal("Lorraine",NN,VIRUS,0,NN*0.95,NN*0.05,0,0,0)
+epsilon = 0.1 # proportionde la population testée
+duree = 50 # en jours 
 Lorraine.crache_un_graphe(epsilon,duree)
-print (Lorraine.resultat_politique_epidemie(epsilon, duree))
+
+
+
+
 
 
