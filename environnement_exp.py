@@ -2,14 +2,15 @@ from random import uniform
 from random import gauss
 import numpy as np 
 import matplotlib.pyplot as plt
- 
+from scipy.integrate import odeint 
+
 class maladie :
     def __init__(self,R,pi,mu) :
         self.R = R
         self.beta = R*mu
         self.pi = pi 
         self.mu = mu 
-
+#definition des focntins usuelles inutiles
     def get_beta(self) :
             return self.beta
 
@@ -72,7 +73,7 @@ class env_minimal :
     def evol_local(self,nmbr_test,region_autre) :
         dS = - self.virus.beta* self.S0 * (self.U0 + (1-self.virus.pi)*self.P0) #  on enlève les personnes infectées 
         dU = -dS - self.virus.mu*self.U0 - (nmbr_test)*(self.U0/(self.U0+self.R0_U+self.S0)) + self.virus.beta*(self.influence_inter_regionale * region_autre.U0)# (epsilon * NN )*(U0/(U0+R0+S0) le nombr de test * la proportion d'infectée dans la population qu'il reste à tester donc c'est le nombre de personne détectées positives à la fin des test
-        dP1 = (nmbr_test)*(self.U0/(self.U0+self.R0_U+self.S0)) # on enlève les guéries et nmbr_test*Prbl de tomber sur un +
+
         dP = (nmbr_test )*(self.U0/(self.U0+self.R0_U+self.S0)) - self.virus.mu * self.P0 
         dR_U = self.virus.mu * self.virus.U0  # on ajoute les personnes guéries et qui vont se refaire testées
         dR_P = self.virus.mu * self.virus.P0 # on ajoute les personnes guéries sans le savoir
@@ -103,38 +104,17 @@ class env_minimal :
     def evol_local_seule (self,proportion_de_la_pop_testee):
         # Condition pour pas faire des calculs inutiles ou incohérent
         if  (self.U0 < (self.population)*(10**-10)) or(self.U0 > self.population):
-            nmbr_test = proportion_de_la_pop_testee * self.population
-            dS = - self.virus.beta* self.S0 * (self.U0 + (1-self.virus.pi)*self.P0) # *(self.S0/self.population) 
-            dU = -dS - self.virus.mu*self.U0 - (nmbr_test)*(self.U0/(self.U0+self.R0_U+self.S0)) # (epsilon * NN )*(U0/(U0+R0+S0) le nombr de test * la proportion d'infectée dans la population qu'il reste à tester donc c'est le nombre de personne détectées positives à la fin des test
-            dP1 = (nmbr_test)*(self.U0/(self.U0+self.R0_U+self.S0)) # on enlève les guéries et nmbr_test*Prbl de tomber sur un +
-            dP = (nmbr_test )*(self.U0/(self.U0+self.R0_U+self.S0)) - self.virus.mu * self.P0
-            dR_U = self.virus.mu * self.U0  # on ajoute les personnes guéries et qui vont se refaire testées
-            dR_P = self.virus.mu * self.P0 # on ajoute les personnes guéries sans le savoir
-            dS = (dP+dU+dR_U+dR_P) * (-1)
 
-                #Actualistaion des facteurs 
-            self.S0 = self.S0 + dS 
-            self.U0 = self.U0 + dU 
-            self.P0 = self.P0 + dP 
-            self.R0_P = self.R0_P + dR_P
-            self.R0_U = self.R0_U + dR_U
             self.history[0].append(self.S0)
             self.history[1].append(self.U0)
             self.history[2].append(self.P0)
             self.history[3].append(self.R0_U)
             self.history[4].append(self.R0_P)
-            # AVERTISSEMENT DE NEGATIVITE IMPORTNANT 
-            print ([row[-2] for row in self.history])
-            print ([row[-1] for row in self.history])
-            print(len(self.history[0]))
-
-
         else : 
                 # Calcul des variations 
             nmbr_test = proportion_de_la_pop_testee * self.population
             dS = - self.virus.beta* self.S0 * (self.U0 + (1-self.virus.pi)*self.P0) # *(self.S0/self.population) 
             dU = -dS - self.virus.mu*self.U0 - (nmbr_test)*(self.U0/(self.U0+self.R0_U+self.S0)) # (epsilon * NN )*(U0/(U0+R0+S0) le nombr de test * la proportion d'infectée dans la population qu'il reste à tester donc c'est le nombre de personne détectées positives à la fin des test
-            dP1 = (nmbr_test)*(self.U0/(self.U0+self.R0_U+self.S0)) # on enlève les guéries et nmbr_test*Prbl de tomber sur un +
             dP = (nmbr_test )*(self.U0/(self.U0+self.R0_U+self.S0)) - self.virus.mu * self.P0
             dR_U = self.virus.mu * self.U0  # on ajoute les personnes guéries et qui vont se refaire testées
             dR_P = self.virus.mu * self.P0 # on ajoute les personnes guéries sans le savoir
@@ -166,7 +146,7 @@ class env_minimal :
         RU, = ax.plot(TEMPS, data[3], marker='+', color='green', label='RO_U')
         RP ,= ax.plot(TEMPS, data[4], marker='+', color='violet', label='R0_P')
         R, = ax.plot(TEMPS, data[4] + data [3], marker='+', color='orange', label='RP+RU')
-        ax.set(xlabel='Temps (en jours)', ylabel='Proportion de la population', title="Evolution pour beta = "+ str(self.virus.beta)+ " / pi = " + str(self.virus.pi) + " / mu = " + str(self.virus.mu))
+        ax.set(xlabel='Temps (en jours)', ylabel='Proportion de la population', title="Evolution discrète pour beta = "+ str(self.virus.beta)+ " / pi = " + str(self.virus.pi) + " / mu = " + str(self.virus.mu))
         plt.legend([S,U,P,RU,RP,R], ['S', 'U', 'P','R_U','R_P','R total'], loc='best')
         plt.show()
 
@@ -179,18 +159,79 @@ class env_minimal :
         else :
             return [self.U0 ,self.virus.beta,self.virus.pi,self.virus.mu]
     
-    def determiner_controllabilite (self,proportion_de_la_pop_testee,time_limit) :
-        # renvoie un vecteur comprenant la controlabilité la durée pour controlable et les paramètres du virus 
-        i = 0
-        ok = 0
+    def  crache_un_graphe_continu(self,proportion_test,time_limit) :# avec t = 1 dans notre cas
+    # définition du système d'équation diff 
+        def evolution_continue(vecteur_condition_initiale,t) :# avec t = 1 dans notre cas
+            population = self.population
+            nmbr_test = proportion_test * population
+            S,U,P,R_U,R_P = vecteur_condition_initiale
+            dS = - self.virus.beta* S * (U + (1-self.virus.pi)*P) 
+            dU = -dS - self.virus.mu*U - (nmbr_test)*(U/(U+R_U+S)) 
+            dP = (nmbr_test )*((U/(U+R_U+S))) - self.virus.mu * P
+            dR_U = self.virus.mu * U  # on ajoute les personnes guéries et qui vont se refaire testées
+            dR_P = self.virus.mu * P # on ajoute les personnes guéries sans le savoir
+            dS = (dP+dU+dR_U+dR_P) * (-1)
+            return [dS,dU,dP,dR_U,dR_P]
+        
+        T = np.arange(0,time_limit,1) # liste de 0 à 99 
+    # On extrait les données de la résolution 
+        data = odeint (evolution_continue,[self.S0,self.U0,self.P0,self.R0_U,self.R0_P],T)
+        data = data /self.population
+        Susceptible = data[:,0] 
+        Undetected = data[:,1]
+        Positive = data[:,2]
+        R_Undectected = data[:,3]
+        R_Positive = data[:,4]
+    # Création du Graphique 
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+        S, = ax.plot(T, Susceptible, marker='+', color='blue', label='S0')
+        U ,= ax.plot(T, Undetected , marker='+', color='red', label='U0')
+        P ,= ax.plot(T, Positive, marker='+', color='yellow', label='P0')
+        RU, = ax.plot(T, R_Undectected, marker='+', color='green', label='RO_U')
+        RP ,= ax.plot(T, R_Positive, marker='+', color='violet', label='R0_P')
+        R, = ax.plot(T, R_Undectected + R_Positive, marker='+', color='orange', label='RP+RU')
+        ax.set(xlabel='Temps (en jours)', ylabel='Proportion de la population', title="Evolution continu pour beta = "+ str(self.virus.beta)+ " / pi = " + str(self.virus.pi) + " / mu = " + str(self.virus.mu))
+        plt.legend([S,U,P,RU,RP,R], ['S', 'U', 'P','R_U','R_P','R total'], loc='best')
+        plt.show()
 
-        while self.P0+self.U0 > self.population*0.001 and i < time_limit and self.P0+ self.U0Ò< self.population: 
-            self.evol_local_seule (proportion_de_la_pop_testee)
-            print(self.P0)
-            print(self.U0)
-            i = i + 1
-        if (self.P0+ self.U0<w <self.population* 0.00001 ) : 
-            ok = 1
-        duree = i
-        print (i)
-        return [i,ok,self.virus.R,self.virus.mu,proportion_de_la_pop_testee,self.virus.pi]
+    def evol_local_seule_continu (self,proportion_test) :
+    # définition du système d'équation diff 
+        def evolution_continue(vecteur_condition_initiale,t) :# avec t = 1 dans notre cas
+            population = self.population
+            nmbr_test = proportion_test * population
+            S,U,P,R_U,R_P = vecteur_condition_initiale
+            dS = - self.virus.beta* S * (U + (1-self.virus.pi)*P) 
+            dU = -dS - self.virus.mu*U - (nmbr_test)*(U/(U+R_U+S)) 
+            dP = (nmbr_test )*((U/(U+R_U+S))) - self.virus.mu * P
+            dR_U = self.virus.mu * U  # on ajoute les personnes guéries et qui vont se refaire testées
+            dR_P = self.virus.mu * P # on ajoute les personnes guéries sans le savoir
+            dS = (dP+dU+dR_U+dR_P) * (-1)
+            return [dS,dU,dP,dR_U,dR_P]
+    #Extraction et actualisation des données 
+        T = np.arange(0,100,1)
+        data = odeint (evolution_continue,[self.S0,self.U0,self.P0,self.R0_U,self.R0_P],T)
+        data = data /self.population
+        self.S0 = data[1,0] 
+        self.U0 = data[1,1]
+        self.P0 = data[1,2]
+        self.R0_U = data[1,3]
+        self.R0_P = data[1,4]
+        self.history[0].append(self.S0)
+        self.history[1].append(self.U0)
+        self.history[2].append(self.P0)
+        self.history[3].append(self.R0_U)
+        self.history[4].append(self.R0_P)
+
+    def determiner_controllabilite (self,proportion_de_la_pop_testee,time_limit) :
+            # renvoie un vecteur comprenant la controlabilité la durée pour controlable et les paramètres du virus 
+            i = 0
+            ok = 0
+            while (self.P0+self.U0 > self.population*0.001) and (i < time_limit) and (self.P0+ self.U0< self.population) : 
+                self.evol_local_seule_continu(proportion_de_la_pop_testee)   
+                i = i + 1
+
+            if (self.P0+ self.U0<self.population* 0.00001 ) : 
+                ok = 1
+            duree = i
+            return [duree,ok,self.virus.R,self.virus.mu,self.virus.pi,proportion_de_la_pop_testee]
+    
