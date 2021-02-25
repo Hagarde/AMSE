@@ -115,7 +115,7 @@ class env_minimal :
                 #Actualistaion des facteurs 
             self.S0 = self.S0 + dS 
             self.U0 = self.U0 + dU 
-            self.P0 = self.P0 + dP**1.5 
+            self.P0 = self.P0 + dP 
             self.R0_P = self.R0_P + dR_P
             self.R0_U = self.R0_U + dR_U
             self.history[0].append(self.S0)
@@ -123,6 +123,11 @@ class env_minimal :
             self.history[2].append(self.P0)
             self.history[3].append(self.R0_U)
             self.history[4].append(self.R0_P)
+            # AVERTISSEMENT DE NEGATIVITE IMPORTNANT 
+            print ([row[-2] for row in self.history])
+            print ([row[-1] for row in self.history])
+            print(len(self.history[0]))
+
 
         else : 
                 # Calcul des variations 
@@ -173,3 +178,19 @@ class env_minimal :
             return [self.U0 + self.P0*(1-self.virus.pi),self.virus.beta,self.virus.pi,self.virus.mu]
         else :
             return [self.U0 ,self.virus.beta,self.virus.pi,self.virus.mu]
+    
+    def determiner_controllabilite (self,proportion_de_la_pop_testee,time_limit) :
+        # renvoie un vecteur comprenant la controlabilité la durée pour controlable et les paramètres du virus 
+        i = 0
+        ok = 0
+
+        while self.P0+self.U0 > self.population*0.001 and i < time_limit and self.P0+ self.U0Ò< self.population: 
+            self.evol_local_seule (proportion_de_la_pop_testee)
+            print(self.P0)
+            print(self.U0)
+            i = i + 1
+        if (self.P0+ self.U0<w <self.population* 0.00001 ) : 
+            ok = 1
+        duree = i
+        print (i)
+        return [i,ok,self.virus.R,self.virus.mu,proportion_de_la_pop_testee,self.virus.pi]
