@@ -24,10 +24,13 @@ class maladie :
 class env_total: 
     def __init__(self,NN1,NN2,NN3,NN4,virus,matrice_influence,S01,U01,P01,R0_U1,R0_P1,S02,U02,P02,R0_U2,R0_P2,S03,U03,P03,R0_U3,R0_P3,S04,U04,P04,R0_U4,R0_P4) :
         self.population = NN1+NN2+NN3+NN4
-        virus.beta = virus.beta / self.population
         self.pi = virus.pi 
         self.mu = virus.mu 
         self.virus = virus 
+        self.beta1 = virus.beta/NN1
+        self.beta2 = virus.beta/NN2
+        self.beta3 = virus.beta/NN3
+        self.beta4 = virus.beta/NN4
         self.influence_1_2 = matrice_influence[0][1]
         self.influence_1_3 = matrice_influence[0][2]
         self.influence_1_4 = matrice_influence[0][3]
@@ -73,10 +76,10 @@ class env_total:
         test4 = prop_test4 * self.NN4
         def systeme_diff (vecteur_condition_initiale,t) :
             S01,U01,P01,R0_U1,R0_P1,S02,U02,P02,R0_U2,R0_P2,S03,U03,P03,R0_U3,R0_P3,S04,U04,P04,R0_U4,R0_P4 = vecteur_condition_initiale
-            dS1 = - self.virus.beta * S01 * (U01 + (1-self.virus.pi)*P01)
-            dS2 = - self.virus.beta * S02 * (U02 + (1-self.virus.pi)*P02)
-            dS3 = - self.virus.beta * S03 * (U03 + (1-self.virus.pi)*P03)
-            dS4 = - self.virus.beta * S04 * (U04 + (1-self.virus.pi)*P04) 
+            dS1 = - self.beta1 * S01 * (U01 + (1-self.virus.pi)*P01)
+            dS2 = - self.beta2 * S02 * (U02 + (1-self.virus.pi)*P02)
+            dS3 = - self.beta3 * S03 * (U03 + (1-self.virus.pi)*P03)
+            dS4 = - self.beta4 * S04 * (U04 + (1-self.virus.pi)*P04) 
             dR_U1 = self.virus.mu * U01 
             dR_U2 = self.virus.mu * U02 
             dR_U3 = self.virus.mu * U03 
@@ -89,10 +92,10 @@ class env_total:
             dP2 = (test2)*((U02/(U02+R0_U2+S02))) - self.virus.mu * P02
             dP3 = (test3)*((U03/(U03+R0_U3+S03))) - self.virus.mu * P03
             dP4 = (test4)*((U04/(U04+R0_U4+S04))) - self.virus.mu * P04
-            dU1 = -dS1 - self.virus.mu*U01 - (test1)*(U01/(U01+R0_U1+S01)) + U02 * self.influence_1_2 + U03 * self.influence_1_3 + U04 * self.influence_1_4
-            dU2 = -dS2 - self.virus.mu*U02 - (test2)*(U02/(U02+R0_U2+S02)) + U01 * self.influence_2_1 + U03 * self.nfluence_2_3 + U04 * self.influence_2_4
-            dU3 = -dS3 - self.virus.mu*U03 - (test3)*(U03/(U03+R0_U3+S03)) + U01 * self.influence_3_2 + U02 * self.influence_3_2 + U04 * self.influence_3_4
-            dU4 = -dS4 - self.virus.mu*U04 - (test4)*(U04/(U04+R0_U4+S04)) + U01 * self.influence_4_1 + U02 * self.influence_4_2 + U03 * self.influence_4_3
+            dU1 = -dS1 - self.virus.mu*U01 - (test1)*(U01/(U01+R0_U1+S01)) + U02 * self.influence_1_2* self.beta2 + U03 * self.influence_1_3 * self.beta3 + U04 * self.influence_1_4 *self.beta4
+            dU2 = -dS2 - self.virus.mu*U02 - (test2)*(U02/(U02+R0_U2+S02)) + U01 * self.influence_2_1 * self.beta1 + U03 * self.influence_2_3 *self.beta3+ U04 * self.influence_2_4*self.beta4 
+            dU3 = -dS3 - self.virus.mu*U03 - (test3)*(U03/(U03+R0_U3+S03)) + U01 * self.influence_3_1 * self.beta1+ U02 * self.influence_3_2 * self.beta2 + U04 * self.influence_3_4*self.beta4
+            dU4 = -dS4 - self.virus.mu*U04 - (test4)*(U04/(U04+R0_U4+S04)) + U01 * self.influence_4_1 * self.beta1+ U02 * self.influence_4_2 * self.beta2 + U03 * self.influence_4_3*self.beta3 
             return [dS1,dU1,dP1,dR_U1,dR_P1,dS2,dU2,dP2,dR_U2,dR_P2,dS3,dU3,dP3,dR_U3,dR_P3,dS4,dU4,dP4,dR_U4,dR_P4]
         T  = np.arange(0,100,1)
         data = odeint (systeme_diff,[self.S1,self.U1,self.P1,self.R_U1,self.R_P1,self.S2,self.U2,self.P2,self.R_U2,self.R_P2,self.S3,self.U3,self.P3,self.R_U3,self.R_P3,self.S4,self.U4,self.P4,self.R_U4,self.R_P4],T)
@@ -148,10 +151,10 @@ class env_total:
         test4 = prop_test4 * self.NN4
         def systeme_diff (vecteur_condition_initiale,t) :
             S01,U01,P01,R0_U1,R0_P1,S02,U02,P02,R0_U2,R0_P2,S03,U03,P03,R0_U3,R0_P3,S04,U04,P04,R0_U4,R0_P4 = vecteur_condition_initiale
-            dS1 = - self.virus.beta * S01 * (U01 + (1-self.virus.pi)*P01)
-            dS2 = - self.virus.beta * S02 * (U02 + (1-self.virus.pi)*P02)
-            dS3 = - self.virus.beta * S03 * (U03 + (1-self.virus.pi)*P03)
-            dS4 = - self.virus.beta * S04 * (U04 + (1-self.virus.pi)*P04) 
+            dS1 = - self.beta1 * S01 * (U01 + (1-self.virus.pi)*P01)
+            dS2 = - self.beta2 * S02 * (U02 + (1-self.virus.pi)*P02)
+            dS3 = - self.beta3 * S03 * (U03 + (1-self.virus.pi)*P03)
+            dS4 = - self.beta4 * S04 * (U04 + (1-self.virus.pi)*P04) 
             dR_U1 = self.virus.mu * U01 
             dR_U2 = self.virus.mu * U02 
             dR_U3 = self.virus.mu * U03 
@@ -164,12 +167,12 @@ class env_total:
             dP2 = (test2)*((U02/(U02+R0_U2+S02))) - self.virus.mu * P02
             dP3 = (test3)*((U03/(U03+R0_U3+S03))) - self.virus.mu * P03
             dP4 = (test4)*((U04/(U04+R0_U4+S04))) - self.virus.mu * P04
-            dU1 = -dS1 - self.virus.mu*U01 - (test1)*(U01/(U01+R0_U1+S01)) + (U02 * self.influence_1_2 + U03 * self.influence_1_3 + U04 * self.influence_1_4) * self.virus.beta
-            dU2 = -dS2 - self.virus.mu*U02 - (test2)*(U02/(U02+R0_U2+S02)) + (U01 * self.influence_2_1 + U03 * self.influence_2_3 + U04 * self.influence_2_4) * self.virus.beta
-            dU3 = -dS3 - self.virus.mu*U03 - (test3)*(U03/(U03+R0_U3+S03)) + (U01 * self.influence_3_1 + U02 * self.influence_3_2 + U04 * self.influence_3_4) * self.virus.beta
-            dU4 = -dS4 - self.virus.mu*U04 - (test4)*(U04/(U04+R0_U4+S04)) + (U01 * self.influence_4_1 + U02 * self.influence_4_2 + U03 * self.influence_4_3) * self.virus.beta
+            dU1 = -dS1 - self.virus.mu*U01 - (test1)*(U01/(U01+R0_U1+S01)) + U02 * self.influence_1_2* self.beta2 + U03 * self.influence_1_3 * self.beta3 + U04 * self.influence_1_4 *self.beta4
+            dU2 = -dS2 - self.virus.mu*U02 - (test2)*(U02/(U02+R0_U2+S02)) + U01 * self.influence_2_1 * self.beta1 + U03 * self.influence_2_3 *self.beta3+ U04 * self.influence_2_4*self.beta4 
+            dU3 = -dS3 - self.virus.mu*U03 - (test3)*(U03/(U03+R0_U3+S03)) + U01 * self.influence_3_1 * self.beta1+ U02 * self.influence_3_2 * self.beta2 + U04 * self.influence_3_4*self.beta4
+            dU4 = -dS4 - self.virus.mu*U04 - (test4)*(U04/(U04+R0_U4+S04)) + U01 * self.influence_4_1 * self.beta1+ U02 * self.influence_4_2 * self.beta2 + U03 * self.influence_4_3*self.beta3 
             return [dS1,dU1,dP1,dR_U1,dR_P1,dS2,dU2,dP2,dR_U2,dR_P2,dS3,dU3,dP3,dR_U3,dR_P3,dS4,dU4,dP4,dR_U4,dR_P4]
-        T  = np.arange(0,50,1)
+        T  = np.arange(0,100,1)
         data = odeint (systeme_diff,[self.S1,self.U1,self.P1,self.R_U1,self.R_P1,self.S2,self.U2,self.P2,self.R_U2,self.R_P2,self.S3,self.U3,self.P3,self.R_U3,self.R_P3,self.S4,self.U4,self.P4,self.R_U4,self.R_P4],T)
     # On extrait les données pour préparer la représentation graphique 
         s1 = data[:,0] 

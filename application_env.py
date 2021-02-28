@@ -17,14 +17,14 @@ Lorraine.crache_un_graphe(proportion_test,duree)
 # Les test pour savoir si notre modèle est cohérent 
 """
 NN = (10**5) 
-R,pi,mu = 20,1,1/14
+R,pi,mu = 10,1,1/15
 VIRUS = env.maladie(R,pi,mu)
 Lorraine = env.env_minimal("Lorraine",NN,VIRUS,0,NN*0.95,NN*0.05,0,0,0)
-proportion_test = 0.5 # proportionde la population testée
-duree = 50 # en jours 
-Lorraine.crache_un_graphe(proportion_test,duree)
-
+proportion_test = 0.1 # proportionde la population testée
+duree = 100 # en jours 
+Lorraine.crache_un_graphe_continu(proportion_test,duree)
 """
+
 #Enquêtons sur les valeurs négatives ! 
 """
 NN = (10**5) 
@@ -74,9 +74,10 @@ grille = np.array(grille)
 np.savetxt("grille_search.txt",grille,delimiter=";",header='R,mu,pi,proportion testée,infecté max, date, Infecté par maladie , infectée au bout de 100 jours ')
 """
 
-"""
+
 #Je teste le monstre de calcul avec 4 régions et je vais corriger petit à petit les milliard ed bug 
-R,pi,mu = 20,1,1/15
+# Il faut multiplier par 4 beta car la population 4 fois plus importante il y a qqch que je ne comprends pas de ouf 
+R,pi,mu = 10,1,1/15
 peste = env.maladie(R,pi,mu)
 matrice_influence = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 NN1,NN2,NN3,NN4 = 10**5,10**5,10**5,10**5
@@ -87,8 +88,9 @@ S04,U04,P04,R0_U4,R0_P4 = NN4 * 0.95 ,NN4* 0.05 ,0,0,0
 # question sur le beta qui doit-être divisé par pop  totale ou locale 
 monde = env.env_total(NN1,NN2,NN3,NN4,peste,matrice_influence,S01,U01,P01,R0_U1,R0_P1,S02,U02,P02,R0_U2,R0_P2,S03,U03,P03,R0_U3,R0_P3,S04,U04,P04,R0_U4,R0_P4)
 monde.graphe_sur_charge(0.1,0.25,0.4,0.5)
-"""
 
+
+"""
 NN = (10**5) 
 R,pi,mu = 15,1,1/14
 VIRUS = env.maladie(R,pi,mu)
@@ -98,3 +100,5 @@ duree = 100
 Lorraine = env.env_minimal("Lorraine",NN,VIRUS,0,NN*0.95,NN*0.05,0,0,0)
 Lorraine.crache_un_graphe_continu(proportion_test,duree)
 print(Lorraine.determiner_controllabilite (proportion_test,100))
+"""
+
